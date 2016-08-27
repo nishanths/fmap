@@ -17,7 +17,7 @@ fmap generates a go source file containing a map[string][]byte
 for the specified directory trees. The keys are the paths
 of files and the values are the contents of the file at that path.
 
-The generated file is printed to stdout. Empty directories are
+The generated go file is printed to stdout. Empty directories are
 ignored, and symlinks are not followed.
 
 usage:

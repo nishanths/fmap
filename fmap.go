@@ -25,7 +25,7 @@ const helpString = `fmap generates a go source file containing a map[string][]by
 for the specified directory trees. The keys are the paths
 of files and the values are the contents of the file at that path.
 
-The generated file is printed to stdout. Empty directories are
+The generated go file is printed to stdout. Empty directories are
 ignored, and symlinks are not followed.
 
 usage:
@@ -122,7 +122,7 @@ func main() {
 	wg.Wait()
 	close(merged)
 
-	tmpl.Execute(os.Stdout, struct {
+	if err := tmpl.Execute(os.Stdout, struct {
 		Package string
 		Var     string
 		M       map[string][]byte
@@ -130,7 +130,10 @@ func main() {
 		flags.Package,
 		flags.Var,
 		m,
-	})
+	}); err != nil {
+		stderr.Println(err)
+		os.Exit(1)
+	}
 }
 
 // File represents the path and contents of a file.
