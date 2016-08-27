@@ -70,7 +70,7 @@ func main() {
 			os.Exit(1)
 		}
 		if !info.IsDir() {
-			stderr.Println(errors.New(`fmap: error: path argument must be a directory"`))
+			stderr.Println(errors.New(`fmap: error: path argument must be a directory`))
 			os.Exit(1)
 		}
 	}
@@ -120,6 +120,9 @@ func main() {
 	})
 }
 
+// File represents the path and contents of a file.
+// Err has no real relation, but makes it convenient to
+// pass any errors encountered in fileContents.
 type File struct {
 	Path    string
 	Content []byte
