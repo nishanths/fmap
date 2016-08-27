@@ -34,7 +34,7 @@ usage:
 flags:
   -package  package name to use in generated file (default: "main")
   -var      variable name of the map (default: "files")
-  -abs      use absolute paths for keys
+  -abs      use absolute paths for map keys
 
 example:
   fmap static/css static/js | gofmt > static_files.go`
@@ -70,7 +70,7 @@ func main() {
 			os.Exit(1)
 		}
 		if !info.IsDir() {
-			stderr.Println(errors.New(`fmap: error: "path" argument must be a directory"`))
+			stderr.Println(errors.New(`fmap: error: path argument must be a directory"`))
 			os.Exit(1)
 		}
 	}
