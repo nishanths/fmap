@@ -83,12 +83,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	mLock := sync.Mutex{}
+	wg := sync.WaitGroup{}
 	m := make(map[string][]byte)
+	merged := make(chan File)
 
 	for _, dirRoot := range roots {
-		out := fileContents(dirRoot)
-		for f := range out {
+		dirRoot := dirRoot
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			out := fileContents(dirRoot)
+			for f := range out {
+				merged <- f
+			}
+		}()
+	}
+
+	go func() {
+		for f := range merged {
 			if f.Err != nil {
 				stderr.Println(f.Err)
 				os.Exit(1)
@@ -103,11 +115,12 @@ func main() {
 				}
 				k = absP
 			}
-			mLock.Lock()
 			m[filepath.ToSlash(k)] = f.Content
-			mLock.Unlock()
 		}
-	}
+	}()
+
+	wg.Wait()
+	close(merged)
 
 	tmpl.Execute(os.Stdout, struct {
 		Package string
