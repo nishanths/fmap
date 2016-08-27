@@ -58,7 +58,7 @@ func main() {
 	flag.Parse()
 
 	roots := flag.Args()
-	if len(roots) == 0 || roots[0] == "" {
+	if len(roots) == 0 {
 		stderr.Println(errors.New(`fmap: error: require path argument`))
 		stderr.Println(helpString)
 		os.Exit(2)
