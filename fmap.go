@@ -100,27 +100,27 @@ func main() {
 	}
 
 	go func() {
-		for f := range merged {
-			if f.Err != nil {
-				stderr.Println(f.Err)
-				os.Exit(1)
-			}
-
-			k := f.Path
-			if flags.Abs {
-				absP, err := filepath.Abs(f.Path)
-				if err != nil {
-					stderr.Println(err)
-					os.Exit(1)
-				}
-				k = absP
-			}
-			m[filepath.ToSlash(k)] = f.Content
-		}
+		wg.Wait()
+		close(merged)
 	}()
 
-	wg.Wait()
-	close(merged)
+	for f := range merged {
+		if f.Err != nil {
+			stderr.Println(f.Err)
+			os.Exit(1)
+		}
+
+		k := f.Path
+		if flags.Abs {
+			absP, err := filepath.Abs(f.Path)
+			if err != nil {
+				stderr.Println(err)
+				os.Exit(1)
+			}
+			k = absP
+		}
+		m[filepath.ToSlash(k)] = f.Content
+	}
 
 	if err := tmpl.Execute(os.Stdout, struct {
 		Package string
