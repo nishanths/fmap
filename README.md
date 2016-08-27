@@ -1,6 +1,8 @@
 # fmap
 
-Generate a Go map of static file contents.
+Generate a Go `map[string][]byte` of static file contents from specified directories.
+
+[![wercker status](https://app.wercker.com/status/d946d386cadef972e6dc50cef520b6a1/s/master "wercker status")](https://app.wercker.com/project/byKey/d946d386cadef972e6dc50cef520b6a1)
 
 ## Install
 
