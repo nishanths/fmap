@@ -25,8 +25,8 @@ const helpString = `fmap generates a go source file containing a map[string][]by
 for the specified directory trees. The keys are the paths
 of files and the values are the contents of the file at that path.
 
-The generated go file is printed to stdout. Empty directories are
-ignored, and symlinks are not followed.
+The generated go file is printed to stdout (typically you would need to run
+the output through gofmt). Empty directories are ignored, and symlinks are not followed.
 
 usage:
   fmap [flags] path/to/dir path/to/dir2 ...
@@ -45,7 +45,8 @@ var << .Var >> = map[string][]byte{
 	<<- range $k, $v := .M >>
 	"<< $k >>": << $v | printf "%#v" | trimPrefix >>,
 	<<- end >>
-}`
+}
+`
 
 func main() {
 	flag.StringVar(&flags.Package, "package", "main", "package name")
