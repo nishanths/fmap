@@ -58,12 +58,12 @@ func main() {
 	flag.Parse()
 
 	roots := flag.Args()
+	if len(roots) == 0 || roots[0] == "" {
+		stderr.Println(errors.New(`fmap: error: require path argument`))
+		stderr.Println(helpString)
+		os.Exit(2)
+	}
 	for _, dirRoot := range roots {
-		if dirRoot == "" {
-			stderr.Println(errors.New(`fmap: error: require path argument`))
-			stderr.Println(helpString)
-			os.Exit(2)
-		}
 		info, err := os.Stat(dirRoot)
 		if err != nil {
 			stderr.Println(err)
