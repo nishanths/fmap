@@ -15,24 +15,29 @@ import (
 var flags = struct {
 	Package string
 	Var     string
+	Abs     bool
 }{}
 
 var stdout = log.New(os.Stdout, "", 0)
 var stderr = log.New(os.Stderr, "", 0)
 
-const helpString = `fmap generates a go source file containing a map[string][]byte that
-corresponds to the specified directory tree. The keys are the paths
+const helpString = `fmap generates a go source file containing a map[string][]byte
+for the specified directory trees. The keys are the paths
 of files and the values are the contents of the file at that path.
 
 The generated file is printed to stdout. Empty directories are
 ignored, and symlinks are not followed.
 
 usage:
-  fmap [flags] /path/to/dir
+  fmap [flags] path/to/dir path/to/dir2 ...
 
 flags:
   -package  package name to use in generated file (default: "main")
-  -var      variable name of the map (default: "files")`
+  -var      variable name of the map (default: "files")
+  -abs      use absolute paths for keys
+
+example:
+  fmap static/css static/js | gofmt > static_files.go`
 
 const fileTmpl = `package << .Package >>
 
@@ -45,27 +50,29 @@ var << .Var >> = map[string][]byte{
 func main() {
 	flag.StringVar(&flags.Package, "package", "main", "package name")
 	flag.StringVar(&flags.Var, "var", "files", "variable name of map")
+	flag.BoolVar(&flags.Abs, "abs", false, "use absolute path for keys")
 	flag.Usage = func() {
 		stderr.Println(helpString)
 		os.Exit(2)
 	}
 	flag.Parse()
 
-	dirRoot := flag.Arg(0)
-	if dirRoot == "" {
-		stderr.Println(errors.New(`fmap: error: require path argument`))
-		stderr.Println(helpString)
-		os.Exit(2)
-	}
-
-	info, err := os.Stat(dirRoot)
-	if err != nil {
-		stderr.Println(err)
-		os.Exit(1)
-	}
-	if !info.IsDir() {
-		stderr.Println(errors.New(`fmap: error: "path" argument must be a directory"`))
-		os.Exit(1)
+	roots := flag.Args()
+	for _, dirRoot := range roots {
+		if dirRoot == "" {
+			stderr.Println(errors.New(`fmap: error: require path argument`))
+			stderr.Println(helpString)
+			os.Exit(2)
+		}
+		info, err := os.Stat(dirRoot)
+		if err != nil {
+			stderr.Println(err)
+			os.Exit(1)
+		}
+		if !info.IsDir() {
+			stderr.Println(errors.New(`fmap: error: "path" argument must be a directory"`))
+			os.Exit(1)
+		}
 	}
 
 	tmpl, err := template.New("file").Funcs(template.FuncMap{
@@ -76,30 +83,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	mLock := sync.Mutex{}
 	m := make(map[string][]byte)
-	out := fileContents(dirRoot)
-	for f := range out {
-		if f.Err != nil {
-			stderr.Println(f.Err)
-			os.Exit(1)
+
+	for _, dirRoot := range roots {
+		out := fileContents(dirRoot)
+		for f := range out {
+			if f.Err != nil {
+				stderr.Println(f.Err)
+				os.Exit(1)
+			}
+
+			k := f.Path
+			if flags.Abs {
+				absP, err := filepath.Abs(f.Path)
+				if err != nil {
+					stderr.Println(err)
+					os.Exit(1)
+				}
+				k = absP
+			}
+			mLock.Lock()
+			m[filepath.ToSlash(k)] = f.Content
+			mLock.Unlock()
 		}
-		absRoot, err := filepath.Abs(dirRoot)
-		if err != nil {
-			stderr.Println(err)
-			os.Exit(1)
-		}
-		absP, err := filepath.Abs(f.Path)
-		if err != nil {
-			stderr.Println(err)
-			os.Exit(1)
-		}
-		s, err := filepath.Rel(absRoot, absP)
-		if err != nil {
-			stderr.Println(err)
-			os.Exit(1)
-		}
-		k := filepath.ToSlash(s)
-		m[k] = f.Content
 	}
 
 	tmpl.Execute(os.Stdout, struct {
