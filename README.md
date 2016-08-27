@@ -1,5 +1,15 @@
 # fmap
 
+Generate a Go map of static file contents.
+
+## Install
+
+```
+go get -u github.com/nishanths/fmap
+```
+
+## What
+
 ```
 fmap generates a go source file containing a map[string][]byte
 for the specified directory trees. The keys are the paths
@@ -18,12 +28,6 @@ flags:
 
 example:
   fmap static/css static/js | gofmt > static_files.go
-```
-
-## Install
-
-```
-go get -u github.com/nishanths/fmap
 ```
 
 ## Test
