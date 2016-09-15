@@ -21,15 +21,16 @@ var flags = struct {
 var stdout = log.New(os.Stdout, "", 0)
 var stderr = log.New(os.Stderr, "", 0)
 
+const usageString = `usage: fmap [flags] [file ...]`
+
 const helpString = `fmap generates a go source file containing a map[string][]byte
-for the specified directory trees. The keys are the paths
-of files and the values are the contents of the file at that path.
+for the specified paths. The keys in the generated map are file paths
+and the values are the contents of the file at that path.
 
 The generated go file is printed to stdout (typically you would need to run
 the output through gofmt). Empty directories are ignored, and symlinks are not followed.
 
-usage:
-  fmap [flags] path/to/dir path/to/dir2 ...
+usage: fmap [flags] [file ...]
 
 flags:
   -package  package name to use in generated file (default: "main")
@@ -37,7 +38,7 @@ flags:
   -abs      use absolute paths for map keys
 
 example:
-  fmap static/css static/js | gofmt > static_files.go`
+  fmap static/css static/js favicon.ico | gofmt > files.go`
 
 const fileTmpl = `package << .Package >>
 
@@ -59,21 +60,11 @@ func main() {
 	flag.Parse()
 
 	roots := flag.Args()
+
 	if len(roots) == 0 {
 		stderr.Println(errors.New(`fmap: error: require path argument`))
-		stderr.Println(helpString)
+		stderr.Println(usageString)
 		os.Exit(2)
-	}
-	for _, dirRoot := range roots {
-		info, err := os.Stat(dirRoot)
-		if err != nil {
-			stderr.Println(err)
-			os.Exit(1)
-		}
-		if !info.IsDir() {
-			stderr.Println(errors.New(`fmap: error: path argument must be a directory`))
-			os.Exit(1)
-		}
 	}
 
 	tmpl, err := template.New("file").Funcs(template.FuncMap{
@@ -148,6 +139,23 @@ type File struct {
 
 func fileContents(root string) <-chan File {
 	out := make(chan File)
+
+	info, err := os.Stat(root)
+	if err != nil {
+		go func() {
+			out <- File{Err: err}
+			close(out)
+		}()
+		return out
+	}
+	if !info.IsDir() {
+		b, err := ioutil.ReadFile(root)
+		go func() {
+			out <- File{root, b, err}
+			close(out)
+		}()
+		return out
+	}
 
 	go func() {
 		wg := sync.WaitGroup{}

@@ -14,14 +14,13 @@ go get -u github.com/nishanths/fmap
 
 ```
 fmap generates a go source file containing a map[string][]byte
-for the specified directory trees. The keys are the paths
-of files and the values are the contents of the file at that path.
+for the specified paths. The keys in the generated map are file paths
+and the values are the contents of the file at that path.
 
 The generated go file is printed to stdout (typically you would need to run
 the output through gofmt). Empty directories are ignored, and symlinks are not followed.
 
-usage:
-  fmap [flags] path/to/dir path/to/dir2 ...
+usage: fmap [flags] [file ...]
 
 flags:
   -package  package name to use in generated file (default: "main")
@@ -29,7 +28,7 @@ flags:
   -abs      use absolute paths for map keys
 
 example:
-  fmap static/css static/js | gofmt > static_files.go
+  fmap static/css static/js favicon.ico | gofmt > files.go`
 ```
 
 ## Test
