@@ -28,7 +28,7 @@ flags:
   -abs      use absolute paths for map keys
 
 example:
-  fmap static/css static/js favicon.ico | gofmt > files.go`
+  fmap static/css static/js favicon.ico | gofmt > files.go
 ```
 
 ## Test

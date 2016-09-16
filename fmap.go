@@ -79,12 +79,12 @@ func main() {
 	m := make(map[string][]byte)
 	merged := make(chan File)
 
-	for _, dirRoot := range roots {
-		dirRoot := dirRoot
+	for _, p := range roots {
+		p := p
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			out := fileContents(dirRoot)
+			out := fileContents(p)
 			for f := range out {
 				merged <- f
 			}
